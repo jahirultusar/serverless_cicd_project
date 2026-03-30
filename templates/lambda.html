@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Lambda Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 640px;
+            width: 100%;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        p.subtitle {
+            color: #666;
+            margin-bottom: 32px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .architecture {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .arch-box {
+            background-color: #f0f4ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3730a3;
+        }
+
+        .arch-box.highlight {
+            background-color: #ede9fe;
+            border-color: #a78bfa;
+            color: #5b21b6;
+        }
+
+        .arch-arrow {
+            color: #9ca3af;
+            font-size: 18px;
+        }
+
+        button {
+            padding: 14px 36px;
+            background-color: #5b21b6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 24px;
+        }
+
+        button:hover {
+            background-color: #4c1d95;
+        }
+
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .response-box {
+            display: none;
+            margin-top: 8px;
+            padding: 24px;
+            background: linear-gradient(135deg, #ede9fe, #f0f4ff);
+            border: 1px solid #c7d2fe;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .response-box.visible {
+            display: block;
+        }
+
+        .response-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #7c3aed;
+            margin-bottom: 8px;
+        }
+
+        .response-text {
+            font-size: 15px;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 4px 10px;
+            background-color: #d1fae5;
+            color: #065f46;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .error-box {
+            display: none;
+            margin-top: 8px;
+            padding: 16px;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: #991b1b;
+            font-size: 14px;
+        }
+
+        .error-box.visible {
+            display: block;
+        }
+
+        .skills {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .skill-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px 20px;
+            width: 220px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skill-icon {
+            font-size: 36px;
+        }
+
+        .skill-name {
+            font-weight: 500;
+            font-size: 15px;
+            color: #1a1a1a;
+        }
+
+        .skill-desc {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .skill-card select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .skill-card button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 0;
+        }
+
+        .skill-card.bonus {
+            border: 2px dashed #a78bfa;
+            background-color: #faf5ff;
+            opacity: 0.85;
+        }
+
+        .bonus-badge {
+            display: inline-block;
+            margin-bottom: 8px;
+            padding: 3px 10px;
+            background-color: #7c3aed;
+            color: white;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #6b7280;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Serverless Lambda Demo</h1>
+        <p class="subtitle">
+            This page calls an AWS Lambda function via API Gateway.<br>
+            Click the button to invoke your function and see the response.
+        </p>
+
+        <div class="architecture">
+            <div class="arch-box">This page</div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-box">Flask /invoke-lambda</div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-box">API Gateway</div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-box highlight">AWS Lambda</div>
+        </div>
+
+        <div class="skills">
+
+            <div class="skill-card">
+                <div class="skill-icon">🌤</div>
+                <div class="skill-name">What's the weather?</div>
+                <div class="skill-desc">Invokes the tell_weather Lambda function</div>
+                <select id="city-select">
+                    <option value="london">London</option>
+                    <option value="new york">New York</option>
+                    <option value="tokyo">Tokyo</option>
+                    <option value="sydney">Sydney</option>
+                    <option value="paris">Paris</option>
+                </select>
+                <button onclick="invokeSkill('weather')">Get the weather</button>
+            </div>
+
+            <div class="skill-card bonus">
+                <div class="bonus-badge">BONUS TASK</div>
+                <div class="skill-icon">🕐</div>
+                <div class="skill-name">What time is it?</div>
+                <div class="skill-desc">Deploy the tell_time Lambda to unlock this skill</div>
+                <button onclick="invokeSkill('time')">Get The Time</button>
+            </div>
+
+        </div>
+
+        <div class="response-box" id="response-box">
+            <div class="response-label">Lambda says</div>
+            <div class="status-badge">200 OK</div>
+            <div class="response-text" id="response-text"></div>
+        </div>
+
+        <div class="error-box" id="error-box">
+            <strong>Error:</strong> <span id="error-text"></span>
+        </div>
+
+        <br>
+        <a class="back-link" href="/">← Back to quote generator</a>
+    </div>
+
+    <script>
+        async function invokeSkill(skill) {
+            const responseBox = document.getElementById('response-box');
+            const errorBox = document.getElementById('error-box');
+            const responseText = document.getElementById('response-text');
+            const errorText = document.getElementById('error-text');
+
+            responseBox.classList.remove('visible');
+            errorBox.classList.remove('visible');
+
+            const body = { skill };
+            if (skill === 'weather') {
+                body.city = document.getElementById('city-select').value;
+            }
+
+            try {
+                const res = await fetch('/invoke-lambda', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    errorText.textContent = data.error;
+                    errorBox.classList.add('visible');
+                } else {
+                    responseText.textContent = data.response;
+                    responseBox.classList.add('visible');
+                }
+            } catch (err) {
+                errorText.textContent = 'Could not reach the server. Please try again.';
+                errorBox.classList.add('visible');
+            }
+        }
+    </script>
+</body>
+</html>
