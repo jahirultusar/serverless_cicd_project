@@ -1,3 +1,4 @@
+#!/bin/bash
 
 # Start the Flask app
 echo "Starting Flask..."
