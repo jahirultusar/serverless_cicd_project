@@ -19,17 +19,17 @@ def test_home_page_returns_200(client):
 
 def test_quote_route_returns_200(client):
     """Quote route should return a 200 status code."""
-    response = client.get('/quotes')
+    response = client.get('/quote')
     assert response.status_code == 200
 
 def test_quote_returns_json(client):
     """Quote route should return JSON."""
-    response = client.get('/quotes')
+    response = client.get('/quote')
     assert response.content_type == 'application/json'
 
 def test_quote_has_required_fields(client):
     """Quote response should contain quote and author fields."""
-    response = client.get('/quotes')
+    response = client.get('/quote')
     data = response.get_json()
     assert 'quote' in data
     assert 'author' in data

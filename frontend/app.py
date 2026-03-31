@@ -29,7 +29,7 @@ quotes = [
 def home():
     return render_template('index.html')
 
-@app.route('/quotes')  
+@app.route('/quote')  
 def get_quote():
     return jsonify(random.choice(quotes))
 
