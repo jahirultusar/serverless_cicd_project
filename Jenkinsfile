@@ -46,7 +46,7 @@ pipeline {
         stage('Build frontend image') {
             steps {
                 dir('frontend') {
-                    sh 'docker build --platform linux/amd64 -t lina-jay-weather-app .'
+                    sh 'docker build --platform linux/amd64 -t $ECR_REPO:$IMAGE_TAG .'
                 }
             }
         }
@@ -70,7 +70,7 @@ pipeline {
         stage('Tag image for ECR') {
             steps {
                 sh '''
-                docker tag lina-jay-weather-app:$IMAGE_TAG \
+                docker tag $ECR_REPO:$IMAGE_TAG \
                 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
                 '''
             }
@@ -81,6 +81,18 @@ pipeline {
                 sh '''
                 docker push \
                 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Deploy to ECS') {
+            steps {
+                sh '''
+                aws ecs update-service \
+                --cluster lina-jay-weather-app-ecs \
+                --service lina-jay-weather-app-task-service-423ul5x4 \
+                --force-new-deployment \
+                --region $AWS_REGION
                 '''
             }
         }
