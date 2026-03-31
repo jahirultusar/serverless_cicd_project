@@ -8,17 +8,36 @@ pipeline {
             }
         }
 
+        stage('Set up Python') {
+            steps {
+                sh 'python3 --version'
+                sh 'pip3 --version'
+            }
+        }
+
         stage('Install frontend dependencies') {
             steps {
                 dir('frontend') {
-                    sh 'pip install -r requirements.txt'
+                    sh 'pip3 install -r requirements.txt'
                 }
             }
         }
 
-        stage('Run tests') {
+        stage('Install test dependencies') {
             steps {
-                sh 'pytest frontend/tests backend/tests'
+                sh 'pip3 install pytest'
+            }
+        }
+
+        stage('Run frontend tests') {
+            steps {
+                sh 'pytest frontend/tests'
+            }
+        }
+
+        stage('Run backend tests') {
+            steps {
+                sh 'pytest backend/tests'
             }
         }
 
