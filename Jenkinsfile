@@ -31,13 +31,13 @@ pipeline {
 
         stage('Run frontend tests') {
             steps {
-                sh 'pytest frontend/tests'
+                sh 'python3 -m pytest frontend/tests'
             }
         }
 
         stage('Run backend tests') {
             steps {
-                sh 'pytest backend/tests'
+                sh 'python3 -m pytest backend/tests'
             }
         }
 
