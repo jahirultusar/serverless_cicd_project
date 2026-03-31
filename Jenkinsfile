@@ -1,6 +1,13 @@
 pipeline {
     agent any
 
+    environment {
+        AWS_REGION = 'eu-west-2'
+        AWS_ACCOUNT_ID = '664047078509'
+        ECR_REPO = 'lina-jay-weather-app'
+        IMAGE_TAG = 'latest'
+    }
+
     stages {
 
         stage('Set up Python') {
@@ -47,6 +54,34 @@ pipeline {
         stage('Check AWS access') {
             steps {
                 sh 'aws sts get-caller-identity'
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                sh '''
+                aws ecr get-login-password --region $AWS_REGION | \
+                docker login --username AWS --password-stdin \
+                $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                '''
+            }
+        }
+
+        stage('Tag image for ECR') {
+            steps {
+                sh '''
+                docker tag lina-jay-weather-app:$IMAGE_TAG \
+                $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Push image to ECR') {
+            steps {
+                sh '''
+                docker push \
+                $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
             }
         }
     }
