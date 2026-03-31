@@ -1,4 +1,4 @@
-# This is a collaborative CICD project with Lina and Jay
+# This is a collaborative CICD project by Lina and Jay
 
 ## Overview
 
