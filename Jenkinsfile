@@ -2,11 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
 
         stage('Set up Python') {
             steps {
@@ -46,6 +41,12 @@ pipeline {
                 dir('frontend') {
                     sh 'docker build --platform linux/amd64 -t lina-jay-weather-app .'
                 }
+            }
+        }
+
+        stage('Check AWS access') {
+            steps {
+                sh 'aws sts get-caller-identity'
             }
         }
     }
