@@ -39,6 +39,7 @@ Frontend Flask app on AWS Fargate
 Amazon API Gateway
    ↓
 AWS Lambda
+```
 
 ## Project Brief Reference
 
