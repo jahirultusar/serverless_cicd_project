@@ -46,3 +46,6 @@ AWS Lambda
 This project is based on the Makers guidance here:
 
 [Desired application and deployment process](https://journey.makers.tech/pages/desired-application-and-deployment-process)
+
+Note:
+ docker build --platform linux/amd64 -t lina-jay-weather-app .  

@@ -1,0 +1,292 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Lab infrastructure: Jenkins EC2 + ECS Networking for CI/CD labs",
+  "Parameters": {
+    "KeyP": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Please select your key pair"
+    },
+    "InstanceType": {
+      "Type": "String",
+      "AllowedValues": ["t2.small", "t2.medium", "t2.large"],
+      "Default": "t2.medium",
+      "Description": "Select the EC2 instance type for Jenkins"
+    },
+    "ECRRepoName": {
+      "Type": "String",
+      "Description": "Enter your ECR repository name exactly as it appears in the ECR console (e.g. my-app)"
+    }
+  },
+  "Mappings": {
+    "RegionMap": {
+      "eu-west-2": {
+        "micro": "ami-0df345c5653ae9828"
+      }
+    }
+  },
+  "Resources": {
+
+    "LabVpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [{ "Key": "Name", "Value": "Lab VPC" }]
+      }
+    },
+
+    "LabIG": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [{ "Key": "Name", "Value": "LabIG" }]
+      }
+    },
+
+    "labigattach": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": { "Ref": "LabIG" },
+        "VpcId": { "Ref": "LabVpc" }
+      }
+    },
+
+    "LabSubnetPublic": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "eu-west-2a",
+        "CidrBlock": "10.0.0.0/24",
+        "VpcId": { "Ref": "LabVpc" },
+        "MapPublicIpOnLaunch": true,
+        "Tags": [{ "Key": "Name", "Value": "LabSubnetPub1" }]
+      }
+    },
+
+    "LabRtPub": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": ["LabVpc", "labigattach"],
+      "Properties": {
+        "Tags": [{ "Key": "Name", "Value": "Lab Public RT" }],
+        "VpcId": { "Ref": "LabVpc" }
+      }
+    },
+
+    "labroute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": ["LabIG", "LabRtPub"],
+      "Properties": {
+        "RouteTableId": { "Ref": "LabRtPub" },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": { "Ref": "LabIG" }
+      }
+    },
+
+    "PublicNACLRtAssoc": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "LabRtPub" },
+        "SubnetId": { "Ref": "LabSubnetPublic" }
+      }
+    },
+
+    "LabPublicNACL": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "Tags": [{ "Key": "Name", "Value": "LabPublicNACL" }],
+        "VpcId": { "Ref": "LabVpc" }
+      }
+    },
+
+    "LabSubnetNaclAssoc": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": { "Ref": "LabPublicNACL" },
+        "SubnetId": { "Ref": "LabSubnetPublic" }
+      }
+    },
+
+    "PublicNACL1Entry": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "RuleNumber": 10,
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "NetworkAclId": { "Ref": "LabPublicNACL" },
+        "PortRange": { "From": 22, "To": 22 },
+        "Protocol": "6",
+        "RuleAction": "allow"
+      }
+    },
+    "PublicNACL1Entry1": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "RuleNumber": 10,
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": true,
+        "NetworkAclId": { "Ref": "LabPublicNACL" },
+        "Protocol": "-1",
+        "RuleAction": "allow"
+      }
+    },
+    "PublicNACL1Entry2": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "RuleNumber": 20,
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "PortRange": { "From": 32768, "To": 61000 },
+        "NetworkAclId": { "Ref": "LabPublicNACL" },
+        "Protocol": "6",
+        "RuleAction": "allow"
+      }
+    },
+    "PublicNACL1Entry3": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "RuleNumber": 30,
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "PortRange": { "From": 80, "To": 80 },
+        "NetworkAclId": { "Ref": "LabPublicNACL" },
+        "Protocol": "6",
+        "RuleAction": "allow"
+      }
+    },
+    "PublicNACL1Entry4": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "RuleNumber": 40,
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "PortRange": { "From": 8080, "To": 8080 },
+        "NetworkAclId": { "Ref": "LabPublicNACL" },
+        "Protocol": "6",
+        "RuleAction": "allow"
+      }
+    },
+    "PublicNACL1Entry5": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "RuleNumber": 50,
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "PortRange": { "From": 443, "To": 443 },
+        "NetworkAclId": { "Ref": "LabPublicNACL" },
+        "Protocol": "6",
+        "RuleAction": "allow"
+      }
+    },
+
+    "EC2SG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for Jenkins EC2",
+        "VpcId": { "Ref": "LabVpc" },
+        "SecurityGroupIngress": [
+          { "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 22,    "ToPort": 22    },
+          { "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 80,    "ToPort": 80    },
+          { "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 443,   "ToPort": 443   },
+          { "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 8080,  "ToPort": 8080  },
+          { "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 32768, "ToPort": 61000 }
+        ],
+        "SecurityGroupEgress": [
+          { "IpProtocol": "-1", "CidrIp": "0.0.0.0/0" }
+        ]
+      }
+    },
+
+    "JenkinsRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": "ec2.amazonaws.com" },
+            "Action": "sts:AssumeRole"
+          }]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess",
+          "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+        ]
+      }
+    },
+
+    "JenkinsInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "DependsOn": "JenkinsRole",
+      "Properties": {
+        "Path": "/",
+        "Roles": [{ "Ref": "JenkinsRole" }]
+      }
+    },
+
+    "LabEC2": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": ["LabVpc", "JenkinsInstanceProfile"],
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": ["RegionMap", { "Ref": "AWS::Region" }, "micro"]
+        },
+        "InstanceType": { "Ref": "InstanceType" },
+        "IamInstanceProfile": { "Ref": "JenkinsInstanceProfile" },
+        "KeyName": { "Ref": "KeyP" },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/xvda",
+          "Ebs": {
+            "VolumeSize": 20,
+            "VolumeType": "gp3",
+            "DeleteOnTermination": true
+          }
+        }],
+        "Tags": [{
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": [" ", ["Jenkins", { "Ref": "AWS::StackName" }]]
+          }
+        }],
+        "NetworkInterfaces": [{
+          "AssociatePublicIpAddress": true,
+          "DeviceIndex": "0",
+          "GroupSet": [{ "Ref": "EC2SG" }],
+          "SubnetId": { "Ref": "LabSubnetPublic" }
+        }]
+      }
+    }
+
+  },
+
+  "Outputs": {
+    "JenkinsURL": {
+      "Description": "Jenkins url",
+      "Value": {
+        "Fn::Join": ["", ["http://", { "Fn::GetAtt": ["LabEC2", "PublicDnsName"] }, ":8080"]]
+      }
+    },
+    "ECRRepository": {
+      "Description": "ecr_repo",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            { "Ref": "AWS::AccountId" },
+            ".dkr.ecr.",
+            { "Ref": "AWS::Region" },
+            ".amazonaws.com/",
+            { "Ref": "ECRRepoName" }
+          ]
+        ]
+      }
+    },
+    "InstanceId": {
+      "Description": "EC2 instance ID",
+      "Value": { "Ref": "LabEC2" }
+    },
+    "InstanceDns": {
+      "Description": "EC2 public DNS",
+      "Value": { "Fn::GetAtt": ["LabEC2", "PublicDnsName"] }
+    }
+  }
+}
