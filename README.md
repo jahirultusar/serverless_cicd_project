@@ -201,10 +201,9 @@ On Mac, especially Apple Silicon, we used:
 docker build --platform linux/amd64 -t lina-jay-weather-app ./frontend
 ```
 
-This ensures the image is built for the Linux architecture expected by ECS/Fargate.
+This ensures the image is built for the Linux amd64 architecture expected by the target AWS environment.
 
-### Why this mattered
-The local machine was macOS, but the runtime environment on AWS is Linux.
+Review note: The default Linux VMs on EC2 are x86 (or AMD64 as Docker calls it)
 
 ---
 
