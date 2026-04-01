@@ -20,19 +20,11 @@ In short, the aim was to prove a full workflow where code changes in GitHub can 
 
 ---
 
-## Final architecture
+## Deployment and CI/CD diagram
 
-```text
-Browser
-   ↓
-Frontend Flask app on ECS Fargate
-   ↓
-Flask route /invoke-lambda
-   ↓
-API Gateway
-   ↓
-AWS Lambda
-```
+The diagram below shows the deployment architecture and the CI/CD pipeline for the project. The frontend Flask application runs on Amazon ECS Fargate, the backend is provided by AWS Lambda through Amazon API Gateway, and Jenkins automates testing and deployment from GitHub.
+
+![Serverless CI/CD diagram](docs/serverless_ci_cd_diagram.png)
 
 And the delivery pipeline became:
 
@@ -40,12 +32,10 @@ And the delivery pipeline became:
 GitHub
    ↓
 Jenkins
-   ├─ Run frontend tests
-   ├─ Run backend tests
-   ├─ Build frontend Docker image
-   ├─ Push image to ECR
-   ├─ Update Lambda code
-   └─ Force ECS service redeployment
+   ├─ Run frontend and backend tests
+   ├─ Build and push Docker image to Amazon ECR
+   ├─ Force ECS service redeployment
+   └─ Update Lambda function code
 ```
 
 ---
@@ -629,8 +619,9 @@ Attach Lambda permissions to the Jenkins role:
 There was also a slight delay before IAM changes propagated.
 
 ---
+---
 
-## 7. Serverless backend steps completed
+## Serverless backend steps completed
 
 These steps were completed successfully:
 
@@ -646,7 +637,7 @@ These steps were completed successfully:
 
 ---
 
-## 8. Final result
+## And Final result
 
 At the end of the project, the CI/CD pipeline successfully automated:
 
@@ -663,27 +654,34 @@ This means the application now has a full CI/CD workflow for both:
 
 ---
 
-## 9. How to use this guide in future
+## Important: How I’ll use this guide in future
 
 If rebuilding the project from scratch, follow this order:
 
-1. structure the repo into frontend and backend
-2. get frontend working locally
-3. get backend Lambda working locally
-4. deploy Lambda manually
-5. create API Gateway
-6. test API manually with `curl`
-7. wire frontend to API Gateway
-8. build Docker image locally
-9. push image to ECR
-10. create ECS task and service
-11. add frontend env vars to ECS
-12. create Jenkins EC2 with CloudFormation
-13. create incremental Jenkins pipeline
-14. automate ECR push
-15. automate ECS redeploy
-16. automate Lambda deploy
-17. verify end-to-end from browser
+1. Structure the repository into `frontend/` and `backend/`
+2. Get the frontend working locally
+3. Get the backend Lambda logic working locally
+4. Create and test front end and backend unit tests
+5. Create the AWS Lambda function manually in the AWS Console
+6. Deploy the Lambda function and test it with a sample event
+7. Create the API Gateway endpoint
+8. Test the API manually with `curl`
+9. Wire the frontend to API Gateway
+10. Add the required frontend environment variable locally and test end to end
+11. Build the frontend Docker image locally
+12. Push the image to Amazon ECR
+13. Create the ECS cluster, task definition, and service
+14. Add frontend environment variables to the ECS task definition
+15. Verify the deployed frontend works in ECS/Fargate
+16. Create the Jenkins EC2 server with CloudFormation
+17. Configure Jenkins and connect it to the GitHub repository
+18. Create an incremental Jenkins pipeline:
+    - run frontend and backend tests
+    - build the frontend Docker image
+    - push the image to Amazon ECR
+19. Add Lambda deployment automation to Jenkins
+20. Add ECS service redeployment automation to Jenkins
+21. Verify the full CI/CD pipeline end to end from the browser
 
 ---
 
