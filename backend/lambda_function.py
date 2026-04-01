@@ -40,7 +40,7 @@ WEATHER = {
 
 def lambda_handler(event, context):
     params = event.get("queryStringParameters") or {}
-    city = params.get("city", "london").lower()
+    city = params.get("city", "london").strip().lower()
 
     weather = WEATHER.get(city)
 
@@ -48,7 +48,8 @@ def lambda_handler(event, context):
         available = ", ".join(WEATHER.keys())
         return {
             "statusCode": 400,
-            "headers": {"Access-Control-Allow-Origin": "*"},
+            "headers": {"Access-Control-Allow-Origin": "*",
+                        "Content-Type": "application/json"},
             "body": json.dumps({
                 "skill": "tell_weather",
                 "message": f"Sorry, I don't have weather data for {city}. Try one of these: {available}."

@@ -29,7 +29,7 @@ quotes = [
 def home():
     return render_template('index.html')
 
-@app.route('/quote')  
+@app.route('/quote')
 def get_quote():
     return jsonify(random.choice(quotes))
 
@@ -40,9 +40,9 @@ def lambda_page():
 @app.route('/invoke-lambda', methods=['POST'])
 def invoke_lambda():
     weather_url = os.environ.get('LAMBDA_WEATHER_URL', '')
-    time_url    = os.environ.get('LAMBDA_TIME_URL', '')
+    time_url = os.environ.get('LAMBDA_TIME_URL', '')
 
-    data  = request.get_json() or {}
+    data = request.get_json() or {}
     skill = data.get('skill', 'weather')
 
     if skill == 'time':
@@ -52,8 +52,8 @@ def invoke_lambda():
     else:
         if not weather_url:
             return jsonify({"error": "LAMBDA_WEATHER_URL environment variable not set"}), 500
-        city = data.get('city', 'london')
-        url  = f"{weather_url}?city={urllib.parse.quote(city)}"
+        city = data.get('city', 'london').strip().lower()
+        url = f"{weather_url}?city={urllib.parse.quote(city)}"
 
     try:
         req = urllib.request.Request(url)

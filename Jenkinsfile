@@ -85,6 +85,21 @@ pipeline {
             }
         }
 
+        stage('Deploy Lambda') {
+            steps {
+                dir('backend') {
+                    sh '''
+                    rm -f function.zip
+                    zip function.zip lambda_function.py
+                    aws lambda update-function-code \
+                    --function-name lina-jay-weather-lambda \
+                    --zip-file fileb://function.zip \
+                    --region $AWS_REGION
+                    '''
+                }
+            }
+        }
+
         stage('Deploy to ECS') {
             steps {
                 sh '''
